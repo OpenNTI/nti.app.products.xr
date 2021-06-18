@@ -54,7 +54,11 @@ setup(
     namespace_packages=['nti', 'nti.app', 'nti.app.products'],
     tests_require=TESTS_REQUIRE,
     install_requires=[
-        'setuptools'
+        'setuptools',
+        'nti.dataserver',
+        'zope.i18nmessageid',
+        'qrcode[pil]',
+        'nti.xapi'
     ],
     extras_require={
         'test': TESTS_REQUIRE,
