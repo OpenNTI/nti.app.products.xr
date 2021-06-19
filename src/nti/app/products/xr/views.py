@@ -13,6 +13,8 @@ import random
 
 import requests
 
+from requests.auth import AuthBase
+
 from requests.exceptions import HTTPError
 
 from pyramid import httpexceptions as hexc
@@ -36,12 +38,26 @@ from nti.dataserver.interfaces import IDataserverFolder
 from nti.app.products.xr.interfaces import ICMI5LaunchParams
 from nti.app.products.xr.interfaces import IDeviceHandoffStorage
 
+from nti.xapi.activity import Activity
+from nti.xapi.client import LRSClient
+
 from nti.externalization.externalization import to_external_object
 
 logger = __import__('logging').getLogger(__name__)
 
+class CMI5TokenAuth(AuthBase):
+    """
+    A requests.auth implementation that uses the cmi5 token
+    """
+    def __init__(self, token):
+        if not token:
+            raise ValueError('Must supply token')
+        self.token = token
 
-_Z_BASE_32_ALPHABET = "13456789abcdefghijkmnopqrstuwxyz"
+    def __call__(self, r):
+        r.headers['Authorization'] = 'Basic '+self.token
+        return r
+
 
 @view_config(route_name='objects.generic.traversal',
              request_method='GET',
@@ -87,27 +103,22 @@ class AuthenticatedUserView(AbstractView):
             resp.raise_for_status()
             auth = resp.json()['auth-token']
 
-            # TODO Our nti.xapi can do this request on our behalf
-            # and deal with the nuts and bolts of this. We should move to that.
-            headers = {
-                'Authorization': 'Basic '+auth,
-                'X-Experience-API-Version': '1.0.0'
-            }
-            state_params = dict(self.request.params)
-            state_params['stateId'] = 'LMS.LaunchData'
+            lrs = LRSClient(params.endpoint, auth=CMI5TokenAuth(auth))
+            activity = Activity()
+            activity.id = params.activityId
+            document = lrs.retrieve_state(activity,
+                                          params.actor,
+                                          'LMS.LaunchData',
+                                          params.registration)
+            from IPython.core.debugger import Tracer; Tracer()()
 
-            # The state api wants an agent param, not actor
-            state_params['agent'] = state_params['actor']
-            resp = requests.get(params.endpoint+'activities/state',
-                                headers=headers,
-                                params=state_params)
             try:
-                resp.raise_for_status()
-            except HTTPError as e:
-                logger.exception('Bad request: %s', e.response.text)
-                raise
-
-            launch_data = resp.json()
+                launch_data = json.loads(document.content)
+            except ValueError:
+                # The spec says it must be JSON
+                # https://github.com/AICC/CMI-5_Spec_Current/blob/quartz/cmi5_spec.md#101-overview
+                logger.error('Invalid content for LMS.LaunchData. Expected json. got "%s"', document.content)
+                raise hexc.HTTPBadRequest()
 
             # We expect our launch params to be json. This bit I
             # suppose it not totally generally, the spec says this is
@@ -153,7 +164,7 @@ class AuthenticatedUserView(AbstractView):
                 'target': 'aspire',
                 'code': self.code,
                 'launch_params': params,
-                'launch_data': resp.text,
+                'launch_data': data,
                 'auth': auth}
 
 
