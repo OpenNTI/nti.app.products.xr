@@ -50,7 +50,7 @@ theory it has everything the VR experience would need. It's possible
 we can completely bypass the authentication for now (CMI5 gets the
 credentials to the headset we would need for xAPI).
 
-In short, the `CMI5 launch flow <https://github.com/AICC/CMI-5_Spec_Current/blob/quartz/cmi5_spec.md#content_launch>`_, initiates a content launch for a
+In short, the `CMI5 launch flow <https://github.com/AICC/CMI-5_Spec_Current/blob/quartz/cmi5_spec.md#content_launch>`_ initiates a content launch for a
 specified Assignable Unit (AU) at a given `launch url <https://github.com/AICC/CMI-5_Spec_Current/blob/quartz/cmi5_spec.md#url>`_. The launch URL
 can be a page packaged with the CMI5 content, or it can be a fully
 qualified url hosted by another system. The launch url is provided
@@ -154,7 +154,7 @@ data <https://github.com/AICC/CMI-5_Spec_Current/blob/quartz/cmi5_spec.md#130-co
     </courseStructure>
 
 
-The roll of the AU launch url
+The role of the AU launch url
 `https://aspire.nextthought.io/datserver2/@@launch_xr <https://aspire.nextthought.io/datserver2/@@launch_xr>`_ becomes device
 handoff. If we successfully capture all necesary data in the CMI5
 course structure this becomes generic for any application that knows
