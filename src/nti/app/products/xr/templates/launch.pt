@@ -67,6 +67,8 @@
 	</style>
     </head>
     <body class="normal-text">
+	<h1>Let's Get Started</h1>
+	<p>Open then NextThought Launcher application on your headset, then scan or input the code below.</p>
 	<h2 tal:content="options/code"></h2>
 	<block tal:replace="structure view/qr_svg"></block>
 	<table>

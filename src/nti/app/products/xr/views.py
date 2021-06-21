@@ -26,10 +26,13 @@ from qrcode.image.svg import SvgImage
 from qrcode.main import QRCode
 
 from zope import component
+from zope import interface
 
 from zope.cachedescriptors.property import Lazy
 
 from zope.schema import ValidationError
+
+from zope.traversing.interfaces import IEtcNamespace
 
 from nti.app.base.abstract_views import AbstractView
 
@@ -44,6 +47,17 @@ from nti.xapi.client import LRSClient
 from nti.externalization.externalization import to_external_object
 
 logger = __import__('logging').getLogger(__name__)
+
+
+@interface.implementer(IEtcNamespace)
+class XRLaunchNamespace(object):
+    """
+    A traversal namespace used to control access to the xr launch handoff
+    content.
+    """
+
+    __name__ = 'xr_content'
+
 
 class CMI5TokenAuth(AuthBase):
     """
@@ -62,8 +76,8 @@ class CMI5TokenAuth(AuthBase):
 @view_config(route_name='objects.generic.traversal',
              request_method='GET',
              renderer='templates/launch.pt',
-             context=IDataserverFolder,
-             name="launch_aspire")
+             context=XRLaunchNamespace,
+             name="cmi5_launch")
 class AuthenticatedUserView(AbstractView):
     """
     The launch url of our AU responsible for handing off a CMI5 launch
@@ -171,8 +185,8 @@ class AuthenticatedUserView(AbstractView):
 @view_config(route_name='objects.generic.traversal',
              request_method='GET',
              renderer='rest',
-             context=IDataserverFolder,
-             name="launch_aspire_handoff")
+             context=XRLaunchNamespace,
+             name="cmi5_launch_handoff")
 class LaunchHandoffView(AbstractView):
     """
     The second part of the handoff exchanges a code provided by query

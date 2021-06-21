@@ -146,7 +146,7 @@ data <https://github.com/AICC/CMI-5_Spec_Current/blob/quartz/cmi5_spec.md#130-co
     	plate tectonics, geological materials and the history of the Earth.
           </langstring>
         </description>
-        <url>https://aspire.nextthought.io/datserver2/@@launch_xr</url>
+        <url>https://aspire.nextthought.io/dataserver2/++etc++xr_content/@@cmi5_launch</url>
         <launchParameters>
           {"bundleId": "com.nextthought.aspire", "extras": {"scene": "pawnshop"}, "cmi5": true}
         </launchParameters>
@@ -179,7 +179,7 @@ camera. The code can be exchanged by performing a json POST of the form:
 
 ::
 
-    POST /dataserver2/@@launch_xr_handoff HTTP/1.1
+    POST /dataserver2/++etc++xr_content/@@cmi5_launch_handoff HTTP/1.1
     Accept: application/json, */*;q=0.5
     Accept-Encoding: gzip, deflate
     Connection: keep-alive
@@ -207,7 +207,7 @@ The response of which will be a json body if the code is valid.
     	"objectType": "Agent"
         },
         "endpoint": "https://cloud.scorm.com/lrs/URV3M3KDEU/",
-        "href": "/dataserver2/@@launch_aspire_handoff?code=yfy9kp",
+        "href": "/dataserver2/++etc++xr_content/@@cmi5_launch_handoff?code=yfy9kp",
         "launchData": {
     	"contextTemplate": {
     	    "contextActivities": {
