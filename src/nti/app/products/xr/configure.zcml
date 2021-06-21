@@ -1,0 +1,31 @@
+<!-- -*- mode: nxml -*- -->
+<configure	xmlns="http://namespaces.zope.org/zope"
+		xmlns:ext="http://nextthought.com/ntp/ext"
+		xmlns:zcml="http://namespaces.zope.org/zcml">
+
+    <include package="zope.component" file="meta.zcml" />
+    <include package="zope.security" file="meta.zcml" />
+    <include package="zope.component" />
+    <include package="zope.security" />
+
+    <include package="nti.externalization" />
+    <include package="nti.externalization" file="meta.zcml"/>
+
+    <include package="nti.xapi" />
+
+    <adapter factory=".adapters.launch_params_from_request"
+		 for="pyramid.interfaces.IRequest"
+		 provides=".interfaces.ICMI5LaunchParams"/>
+
+
+    <utility factory=".handoff.HandoffTokenGenerator"/>
+    <utility factory=".handoff.RedisBackedHandoffStorage"/>
+
+    <!-- 
+	 If the global zcml condition `xr-content` is found enable components to support xr content.
+	 If you need this enabled for a single site in a shared environment that doesn't have the zcml
+         condition, just include this file in a registerIn directive.
+    -->
+    <include package="." file="enable.zcml" zcml:condition="have xr-content"/>
+
+</configure>
