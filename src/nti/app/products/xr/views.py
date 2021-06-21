@@ -124,7 +124,6 @@ class AuthenticatedUserView(AbstractView):
                                           params.actor,
                                           'LMS.LaunchData',
                                           params.registration)
-            from IPython.core.debugger import Tracer; Tracer()()
 
             try:
                 launch_data = json.loads(document.content)
