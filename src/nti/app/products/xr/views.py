@@ -182,7 +182,7 @@ class AuthenticatedUserView(AbstractView):
 
 
 @view_config(route_name='objects.generic.traversal',
-             request_method='GET',
+             request_method='POST',
              renderer='rest',
              context=XRLaunchNamespace,
              name="cmi5_launch_handoff")
@@ -196,7 +196,7 @@ class LaunchHandoffView(AbstractView):
 
     def __call__(self):
         storage = component.getUtility(IDeviceHandoffStorage)
-        code = self.request.params.get('code')
+        code = self.request.json_body.get('code')
         if not code:
             raise hexc.HTTPBadRequest()
         
