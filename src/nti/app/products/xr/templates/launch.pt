@@ -178,7 +178,7 @@ header {
     border-bottom: 1px solid var(--debug-border-color);
 }
 
-@media (max-width: 767px) {
+@media (max-width: 660px) {
     header {
         flex-direction: column;
         gap: 1rem;
