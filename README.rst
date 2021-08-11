@@ -64,7 +64,8 @@ and context.
 Details
 -------
 
-The idea is as follows:
+The AU in this package works in conjunction with an on headset
+"Launcher" application as follows:
 
 1. Create a CMI5 AU for each VR experience. This will encapsulate the
    information necessary to launch the proper experience (apk bundle,
@@ -73,26 +74,28 @@ The idea is as follows:
 2. Create a NextThought hosted launch url that the aforementioned AU's
    will launch from. This launch url will capture the CMI5 launch data
    and store it behind a one time use short lived code. The AU will
-   then present instructions to the user to launch an application on
-   their headset and provide the code both in textual and qr code form.
+   then present instructions to the user to launch the "Launcher"
+   application on their headset and provide the code both in textual
+   and qr code form.
 
-3. The user will launch the specified XR app in their headset and enter
-   the short code, or scan the QR code using the front facing camera.
+3. The user will launch "Launcher" application in their headset and enter
+   the short code, or scan the QR code using the front facing camera (hardware dependent).
 
-4. The XR app will then exchange the short code for launch information
+4. The "Launcher" app will then exchange the short code for launch information
    using a well known (predetermined) API.
 
-5. The XR app will then use the provided launch information to take
-   over the CMI5 flow, sending all necessary CMI5 statements.
+5. The "Launcher" will then translate the AU's `launchParameters meta
+data
+<https://github.com/AICC/CMI-5_Spec_Current/blob/quartz/cmi5_spec.md#130-course-structure-data-requirements>`_
+into an android intent, generate the required cmi5 lifecycle statements, and launch the intent requesting a result.
 
-In the scenario above the discussed flow has the XR app acting as both
-one side of the hand off and as the target learning scenario. In
-practice we can separate this responsibility into a launcher
-application on the headset and a learning application. This separation
-would allow us to launch 3rd party content on the headset we don't
-own. This is the path we will go down now, although it's easy to
-imagine the learning scenario we author doing the hand off without a
-launcher application.
+6. The launched intent may be provided the cmi5 launch data such that
+   the intent can generate more detailed analytics in the cmi5 session.
+
+7. When control is returned to the "Launcher" application the result
+   will be used to end the cmi5 launch with appropriate
+   completion/terminated/passed/failed statements and direct the user
+   to return to the LMS in their browser.
 
 It's all worth noting that the code based hand off is somewhat similar
 to the OAuth 2.0 device flow, but in this case things are
@@ -155,7 +158,7 @@ data <https://github.com/AICC/CMI-5_Spec_Current/blob/quartz/cmi5_spec.md#130-co
 
 
 The role of the AU launch url
-`https://aspire.nextthought.io/datserver2/@@launch_xr <https://aspire.nextthought.io/datserver2/@@launch_xr>`_ becomes device
+`https://aspire.nextthought.io/dataserver2/++etc++xr_content/@@cmi5_launch <https://aspire.nextthought.io/dataserver2/++etc++xr_content/@@cmi5_launch>`_ becomes device
 handoff. If we successfully capture all necesary data in the CMI5
 course structure this becomes generic for any application that knows
 how to be launched in the context of our AU. The launch url will be
@@ -243,13 +246,57 @@ The response of which will be a json body if the code is valid.
         "token": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
     }
 
-The Launcher will then inspect the provided data and launch the
-requested bundleId. When appropriate the launcher may pass additional
-extras from the launchParameters or in the case of content that supports
-CMI5 the entire launch data.
+The Launcher will then inspect the provided data and launch an
+approrpiate android intent based on the launchParameters. The launcher
+is responsible for fulfilling all the `CMI5 AU Requirements
+<https://github.com/AICC/CMI-5_Spec_Current/blob/quartz/cmi5_spec.md#au_requirements>`_. This
+includes sending the required first statement, last statement, and any
+other CMI5 defined and allowed statements using the provided
+contextTemplate and actor.
 
-Scenarios the support CMI5 are responsible for sending fulfilling all
-the `CMI5 AU Requirements <https://github.com/AICC/CMI-5_Spec_Current/blob/quartz/cmi5_spec.md#au_requirements>`_. This includes sending the required first
-statement, last statement, and any other CMI5 defined and allowed
-statements using the provided contextTemplate and actor.
+When appropriate the
+launcher may pass additional extras from the launchParameters or in
+the case of content that supports CMI5 the entire launch data.
 
+Launch Parameters
+-----------------
+
+The Launcher application is responsible for translating the AU's
+launchParameters into an Android intent. The most commonly used intent
+would be the launching of an application (by bundle) with additional
+cmi5 data. However other intents, such as `launching the pico native
+video player
+<http://static.appstore.picovr.com/docs/VideoPlayer/chapter_two.html>`_,
+can also be specified.
+
+Our AU's launchParameters is known to be a json encoded string, which,
+if possible, will be parsed and provided with the launch data as a
+json object nested beneath a top level with the following top level
+keys. launch data is organized within an object "Platforms". There is
+currently one supported platform "Anrdoid" handled by Android based VR
+headsets.
+
+Android Launch
+==============
+
+The Action "Launch" instructs the launcher to launch the provided
+bundle. On android this is equivalent to getting the launch intent for
+the package, and invoking it with the key value pairs provided in
+"Extras". If "CMI5Suppported" is present and true, the launcher should
+provide the cmi5 context, endpoints, and keys to allow the launched
+app to send custom xapi statements.
+
+.. code:: json
+	  
+    {
+        "Platforms": {
+	    "Android": {
+	        "Action": "Launch",
+		"Bundle": "com.nextthought.MeatProcessing",
+		"Extras": {
+		    "ScenarioId": "program-overview"
+		},
+		"CMI5Supported": true
+	    }
+	}
+    }
