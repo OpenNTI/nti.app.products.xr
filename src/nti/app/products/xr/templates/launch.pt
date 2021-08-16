@@ -93,7 +93,7 @@ header {
 }
 
 .qr {
-	  width: clamp(120px, 480px, 100vw);
+	  width: clamp(120px, 400px, 100vw);
 }
 
 .qr .corners {
@@ -104,8 +104,12 @@ header {
 .code-text {
     text-align: center;
     margin-top: -1.5em;
-    line-height: 1;
-    letter-spacing: 0.75px;
+    line-height: 1.5em;
+	 letter-spacing: 0.25px;
+	 color: #000000;
+	 font-weight: bold;
+	 font-size: 24px;
+	 
 }
 
 .debug-container {
@@ -227,7 +231,7 @@ header {
 	    Open the NextThought XR app and scan the QR code or enter the code
 	    manually <span class="text-code" tal:content="options/code">000000000</span>.
 	  </div>
-	  <a class="button play" href="#">Watch tutorial</a>
+	  <a class="button play" href="https://help.nextthought.com/hc/en-us/articles/4405286037908">Watch tutorial</a>
 	</header>
 	<div class="qr-container">
 	  <svg
