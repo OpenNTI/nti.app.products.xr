@@ -341,6 +341,7 @@
 		     registration: script.getAttribute('data-cmi5registration'),
 		     activity: script.getAttribute('data-activityid')
 		 }, onStatusChange);
+		 onStatusChange(result);
 	     }
 	    </script>
 	    
