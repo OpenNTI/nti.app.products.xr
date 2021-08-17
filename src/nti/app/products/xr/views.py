@@ -226,6 +226,8 @@ class XRLaunchStatusView(AbstractView):
         lrs = LRSClient(endpoint, auth=CMI5TokenAuth(token))
         stmts = lrs.query_statements({'activity': activityId,
                                       'registration': registration})
+        if stmts is None:
+            return {'HeadsetStatus': 'Terminated'}
 
         def _in_session(stmt):
             return stmt.context.extensions.get('https://w3id.org/xapi/cmi5/context/extensions/sessionid') == session
