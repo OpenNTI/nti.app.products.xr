@@ -173,12 +173,16 @@ class AuthenticatedUserView(AbstractView):
             logger.debug('Invalid launch request %s', e)
             raise hexc.HTTPBadRequest()
 
-        return {'mode': 'launch',
-                'target': 'aspire',
-                'code': self.code,
-                'launch_params': params,
-                'launch_data': data,
-                'auth': auth}
+        return {
+            'codettl': 300-10, # ttl with some buffer. FIXME don't hardcode this, expose it on the code
+            'mode': 'launch',
+            'returnURL': launch_data.get('returnURL'),
+            'target': 'aspire',
+            'code': self.code,
+            'launch_params': params,
+            'launch_data': data,
+            'auth': auth
+        }
 
 
 @view_config(route_name='objects.generic.traversal',
