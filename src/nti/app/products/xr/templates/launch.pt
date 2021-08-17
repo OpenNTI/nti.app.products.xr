@@ -243,7 +243,7 @@
 		</div>
 		<a class="button play" target="_blank" href="https://help.nextthought.com/hc/en-us/articles/4405286037908">Watch tutorial</a>
 	    </header>
-	    <div class="qr-container" tal:attributes="data-ttl options/codettl">
+	    <div class="qr-container">
 		<svg
 		    class="qr"
 		    viewBox="0 0 100 100"
@@ -252,8 +252,8 @@
 		>
 		    <path
 			d="M8,16 v-8 h8 M84,8 h8 v8 M92,84 v8 h-8 M16,92 h-8 v-8"
-			   fill="none"
-			   class="corners"
+			fill="none"
+			class="corners"
 		    />
 		    <g transform="scale(0.92)">
 			<block tal:replace="structure view/qr_svg"></block>
@@ -264,10 +264,10 @@
 	    <div class="finished-container">
 		<a tal:condition="options/returnURL" tal:attributes="href options/returnURL">I'm all done!</a>
 	    </div>
-	    <script>
-	     var qr = document.querySelector('div.qr-container');
-	     if(qr){
-		 ttl = parseInt(qr.getAttribute('data-ttl'))
+	    <script tal:attributes="data-ttl options/codettl">
+	     var script = document.currentScript
+	     if(script){
+		 ttl = parseInt(script.getAttribute('data-ttl'))
 		 if(ttl){
 		     setTimeout(function(){
 			 var qr = document.querySelector('div.qr-container');
@@ -276,6 +276,74 @@
 		 }
 	     }
 	    </script>
+	    <script tal:condition="options/statusinfo"
+		    tal:attributes="data-token options/statusinfo/lrstoken;
+				   data-endpoint options/statusinfo/lrsendpoint;
+				   data-cmi5registration options/statusinfo/cmi5registration;
+				   data-cmi5session options/statusinfo/cmi5session;
+				   data-activityid options/statusinfo/activityid;
+				   data-apihref options/statusinfo/apihref">
+	     var script = document.currentScript
+	     if(script){
+		 href = script.getAttribute('data-apihref');
+		 console.log('Querying state from ' + href);
+		 async function poll (data, onState, currentStatus='none') {
+		     const response = await fetch(href, {
+			 url: href,
+			 method: 'POST',
+			 body: JSON.stringify(data),
+			 headers: {
+			     'content-type': 'application/json',
+			     'x-requested-with': 'XMLHTTPRequest'
+			 }
+		     });
+		     
+		     if (!response.ok) {
+			 // handle http error codes
+			 return;
+		     }
+
+		     const newData = await response.json();
+		     if (newData.HeadsetStatus !== 'Terminated') {
+			 if (onState) {
+			     onState(newData);
+			 }
+		     }
+
+		     if (newData.HeadsetStatus === 'Terminated') {
+			 return newData;
+		     }
+
+		     await new Promise(t => setTimeout(t, 10000)); // wait 10 seconds
+		     return poll(data, onState, newData.status);
+		 };
+		 function onStatusChange(data){
+		     console.log(data)
+		     if(data.HeadsetStatus == 'Started'){
+			 var qr = document.querySelector('div.qr-container');
+			 qr.classList.add('hide');
+			 return
+		     }
+		     if(data.HeadsetStatus == 'Terminated'){
+			 var a = document.querySelector('div.finished-container a');
+			 if(a){
+			     var href = a.getAttribute('href')
+			     window.location = href;
+			 }
+			 return
+		     }
+		     
+		 }
+		 result = poll({
+		     token: script.getAttribute('data-token'),
+		     endpoint: script.getAttribute('data-endpoint'),
+		     session: script.getAttribute('data-cmi5session'),
+		     registration: script.getAttribute('data-cmi5registration'),
+		     activity: script.getAttribute('data-activityid')
+		 }, onStatusChange);
+	     }
+	    </script>
+	    
 	    <section class="debug-container">
 		<label for="debug">Show Debug Information <span class="chevron">›</span></label>
 		<input id="debug" type="checkbox" />

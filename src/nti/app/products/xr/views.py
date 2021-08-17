@@ -181,7 +181,75 @@ class AuthenticatedUserView(AbstractView):
             'code': self.code,
             'launch_params': params,
             'launch_data': data,
-            'auth': auth
+            'auth': auth,
+            'statusinfo': {
+                'lrstoken': auth,
+                'lrsendpoint': params.endpoint,
+                'cmi5registration': params.registration,
+                'cmi5session': launch_data['contextTemplate']['extensions']['https://w3id.org/xapi/cmi5/context/extensions/sessionid'],
+                'activityid': params.activityId,
+                'apihref': '/dataserver2/++etc++xr_content/@@launch_status'
+            }
+        }
+
+
+@view_config(route_name='objects.generic.traversal',
+             request_method='POST',
+             renderer='rest',
+             context=XRLaunchNamespace,
+             name="launch_status")
+class XRLaunchStatusView(AbstractView):
+    """
+    A view that looks for the statements related to the provided
+    launch session/registration to return details and insight into the
+    current status of the session. Note this is stateless, we expect
+    everything to be provided, including the credentials we can use to
+    access the lms. In general our cmi5 page has access to all of this
+    from the launch request.
+    """
+
+    @Lazy
+    def params(self):
+        return self.request.json_body
+
+    def __call__(self):
+        # We need token, endpoint, session, registration
+        token = self.params.get('token')
+        endpoint = self.params.get('endpoint')
+        session = self.params.get('session')
+        registration = self.params.get('registration')
+        activityId = self.params.get('activity')
+
+        if not token or not endpoint or not session or not registration or not activityId:
+            raise hexc.HTTPBadRequest()
+
+        lrs = LRSClient(endpoint, auth=CMI5TokenAuth(token))
+        stmts = lrs.query_statements({'activity': activityId,
+                                      'registration': registration})
+
+        def _in_session(stmt):
+            return stmt.context.extensions.get('https://w3id.org/xapi/cmi5/context/extensions/sessionid') == session
+        
+        session_stmts = [x for x in stmts if _in_session(x)]
+
+        status = 'Unknown'
+
+        verbs_to_states = {
+            'http://adlnet.gov/expapi/verbs/initialized': 'Started',
+            'http://adlnet.gov/expapi/verbs/terminated': 'Terminated'
+        }
+
+        # session statements come back asc by default and we know
+        # cmi5 transitions from Lauched (us), Initialized (headset), Terminated (headset)
+        # so we can process them in order to figure out the latest state
+        for stmt in session_stmts:
+            verbid = stmt.verb.id
+            if verbid in verbs_to_states:
+                status = verbs_to_states[verbid]
+        
+        return {
+            'HeadsetStatus': status,
+            'Statements': session_stmts
         }
 
 
