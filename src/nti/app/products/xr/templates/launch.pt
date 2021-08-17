@@ -334,7 +334,7 @@
 		     }
 		     
 		 }
-		 result = poll({
+		 result = await poll({
 		     token: script.getAttribute('data-token'),
 		     endpoint: script.getAttribute('data-endpoint'),
 		     session: script.getAttribute('data-cmi5session'),
