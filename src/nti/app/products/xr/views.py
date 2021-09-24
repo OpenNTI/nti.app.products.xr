@@ -125,6 +125,11 @@ class AuthenticatedUserView(AbstractView):
                                           'LMS.LaunchData',
                                           params.registration)
 
+            if document is None:
+                logger.warn('Unable to fetch LMS.LaunchData state document for %s %s %s',
+                            params.actor, activity, params.registration)
+                raise hexc.HTTPBadRequest('No LMS.LaunchData found')
+
             try:
                 launch_data = json.loads(document.content)
             except ValueError:
